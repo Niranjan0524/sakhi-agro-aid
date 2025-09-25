@@ -13,6 +13,7 @@ import {
   Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { generateResponse } from "@/lib/gemini";
 
 interface Message {
   id: string;
@@ -52,33 +53,35 @@ export default function Chatbot() {
       id: Date.now().toString(),
       text: inputText,
       sender: "user",
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputText("");
     setIsTyping(true);
 
-    // Simulate bot response
-    setTimeout(() => {
-      const responses = [
-        "Based on current weather conditions, it's a good time to apply fertilizer to your tomato crops. Make sure to water them after application.",
-        "For pest control in rice fields, consider using neem-based organic pesticides. They are effective and environmentally friendly.",
-        "The ideal time for sowing wheat in your region is mid-November. Prepare your field by adding organic compost.",
-        "Your soil seems suitable for cultivating vegetables. Consider crop rotation with legumes to improve soil nitrogen.",
-        "Current humidity levels are high. Watch out for fungal diseases in your crops. Ensure proper spacing for air circulation."
-      ];
+    try {
+      const reply = await generateResponse(userMessage.text);
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: responses[Math.floor(Math.random() * responses.length)],
+        text: reply,
         sender: "bot",
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, botMessage]);
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "⚠️ Something went wrong while fetching AI response.",
+        sender: "bot",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+    }
   };
 
   const toggleVoiceInput = () => {
