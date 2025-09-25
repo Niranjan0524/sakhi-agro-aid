@@ -72,9 +72,19 @@ export default function Chatbot() {
 
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
+      console.error('Chat error:', error);
+      let errorText = "⚠️ Something went wrong while fetching AI response.";
+      
+      // Check if it's an API overload error
+      if (error instanceof Error && error.message.includes('overloaded')) {
+        errorText = "⚠️ The AI service is currently overloaded. Please try again in a few moments.";
+      } else if (error instanceof Error && error.message.includes('API key')) {
+        errorText = "⚠️ AI service is not properly configured. Please check the API key.";
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "⚠️ Something went wrong while fetching AI response.",
+        text: errorText,
         sender: "bot",
         timestamp: new Date(),
       };
