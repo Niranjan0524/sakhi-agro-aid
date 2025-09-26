@@ -26,7 +26,7 @@ Maintain a friendly, knowledgeable personality in every language. Never switch t
 export async function generateResponse(prompt: string): Promise<string> {
   try {
     // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' });
 
     // Combine system prompt with user prompt
     const fullPrompt = `${SYSTEM_PROMPT}\n\nUser: ${prompt}`;
