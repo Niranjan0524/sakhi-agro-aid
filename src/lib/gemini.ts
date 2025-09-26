@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize the Gemini API client
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+const genAI = new GoogleGenerativeAI('AIzaSyBvFnRnIQG21DWtve9bJZPX5zfaQTZdr1E');
 
 // System prompt for Krishi Sakhi
 const SYSTEM_PROMPT = `You are Krishi Sakhi, an intelligent farming advisor for Kerala smallholders. You are multilingual. 
@@ -25,10 +25,6 @@ Maintain a friendly, knowledgeable personality in every language. Never switch t
  */
 export async function generateResponse(prompt: string): Promise<string> {
   try {
-    if (!import.meta.env.VITE_GEMINI_API_KEY) {
-      throw new Error('Gemini API key is not configured. Please add VITE_GEMINI_API_KEY to your .env file.');
-    }
-
     // Get the generative model
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
@@ -57,5 +53,5 @@ export async function generateResponse(prompt: string): Promise<string> {
  * @returns boolean - True if API key is available
  */
 export function isGeminiConfigured(): boolean {
-  return !!import.meta.env.VITE_GEMINI_API_KEY;
+  return true;
 }
