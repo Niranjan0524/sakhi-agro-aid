@@ -39,34 +39,22 @@ export async function generateResponse(prompt: string): Promise<string> {
     }
     lastCall = now;
 
+    // Get the generative model
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
     // Combine system prompt with user prompt and strict language rule
     const lang = detectLanguageName(prompt);
     const fullPrompt = `${SYSTEM_PROMPT}\n\nSTRICT LANGUAGE RULE: The user's language is ${lang}. You must respond ONLY in ${lang}. Do not translate or mix languages. If the user switches language later, follow the new language.\n\nUser: ${prompt}`;
     
-    // Try models in order: prefer cheaper first, then fallback if 404/not supported
-    const modelCandidates = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro'];
-    for (const m of modelCandidates) {
-      try {
-        const model = genAI.getGenerativeModel({ model: m });
-        const result = await model.generateContent(fullPrompt);
-        const response = await result.response;
-        const text = response.text();
-        // Log raw response for debugging
-        console.log('Gemini raw response:', text);
-        return text;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.warn(`Model ${m} failed:`, msg);
-        if (!msg.toLowerCase().includes('404')) {
-          // Non-404 errors should be handled by outer catch
-          throw err;
-        }
-        // else: try next model
-      }
-    }
+    // Generate content
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Log raw response for debugging
+    console.log("Gemini raw response:", text);
 
-    // If all candidates failed with 404, fall back to generic message handled below
-    throw new Error('All model candidates returned 404');
+    return text;
   } catch (error) {
     console.error('Gemini API Error:', error);
     
@@ -83,6 +71,9 @@ export async function generateResponse(prompt: string): Promise<string> {
       } else if (errorMsg.includes('403')) {
         console.warn('API key issue');
         return '⚠️ Invalid or expired API key.';
+      } else if (errorMsg.includes('404')) {
+        console.warn('Model not found');
+        return '⚠️ AI model unavailable. Please check your API configuration.';
       } else {
         console.error('Unexpected error:', error.message);
         return '⚠️ Unable to get AI response right now. Please try again later.';
@@ -99,5 +90,5 @@ export async function generateResponse(prompt: string): Promise<string> {
  * @returns boolean - True if API key is available
  */
 export function isGeminiConfigured(): boolean {
-  return true;
+  return !!import.meta.env.VITE_GEMINI_API_KEY;
 }
