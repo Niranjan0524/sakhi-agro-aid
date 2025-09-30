@@ -34,7 +34,8 @@ export async function generateResponse(prompt: string): Promise<string> {
     // Throttle requests
     const now = Date.now();
     if (now - lastCall < 3000) {
-      throw new Error('Please wait a few seconds before asking another question.');
+      console.warn('Request throttled: Too many requests');
+      return '⚠️ Please wait a few seconds before asking another question.';
     }
     lastCall = now;
 
@@ -44,29 +45,39 @@ export async function generateResponse(prompt: string): Promise<string> {
     // Combine system prompt with user prompt and strict language rule
     const lang = detectLanguageName(prompt);
     const fullPrompt = `${SYSTEM_PROMPT}\n\nSTRICT LANGUAGE RULE: The user's language is ${lang}. You must respond ONLY in ${lang}. Do not translate or mix languages. If the user switches language later, follow the new language.\n\nUser: ${prompt}`;
+    
     // Generate content
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();
+    
+    // Log raw response for debugging
+    console.log("Gemini raw response:", text);
 
     return text;
   } catch (error) {
     console.error('Gemini API Error:', error);
     
+    // Return user-friendly fallback messages instead of throwing
     if (error instanceof Error) {
       const errorMsg = error.message.toLowerCase();
       
       if (errorMsg.includes('429')) {
-        throw new Error('Rate limit hit. Please wait a minute and try again.');
+        console.warn('Rate limit hit');
+        return '⚠️ Rate limit hit. Please wait a minute and try again.';
       } else if (errorMsg.includes('quota')) {
-        throw new Error('Daily quota exceeded. Please try again tomorrow.');
+        console.warn('Quota exceeded');
+        return '⚠️ Daily quota exceeded. Please try again tomorrow.';
       } else if (errorMsg.includes('403')) {
-        throw new Error('Invalid or expired API key.');
+        console.warn('API key issue');
+        return '⚠️ Invalid or expired API key.';
       } else {
-        throw new Error(`Unexpected error: ${error.message}`);
+        console.error('Unexpected error:', error.message);
+        return '⚠️ Unable to get AI response right now. Please try again later.';
       }
     } else {
-      throw new Error('Unexpected error: Unknown error occurred');
+      console.error('Unknown error type:', error);
+      return '⚠️ Unable to get AI response right now. Please try again later.';
     }
   }
 }
