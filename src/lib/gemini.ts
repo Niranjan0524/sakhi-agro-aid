@@ -40,7 +40,7 @@ export async function generateResponse(prompt: string): Promise<string> {
     lastCall = now;
 
     // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
     // Combine system prompt with user prompt and strict language rule
     const lang = detectLanguageName(prompt);
